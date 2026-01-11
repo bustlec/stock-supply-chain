@@ -1,0 +1,437 @@
+<div class="min-h-screen bg-slate-50 text-slate-900 pb-20">
+  
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-slate-900 to-slate-800 text-white pt-8 pb-16 px-4 shadow-lg relative overflow-hidden">
+    <div class="absolute top-0 right-0 p-8 opacity-10 text-8xl">📈</div>
+    <div class="max-w-6xl mx-auto relative z-10">
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">台股產業族群與供應鏈</h1>
+      <p class="text-slate-300 max-w-2xl text-lg">
+        整合市場核心主流（AI、重電綠能）與經典產業族群，提供詳細上下游供應鏈清單。
+      </p>
+      
+      <!-- Search Bar -->
+      <div class="mt-6 relative max-w-md">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input 
+          type="text" 
+          (input)="updateSearch($event)"
+          placeholder="搜尋股名、代號 (例如: 2330, 台積電)..." 
+          class="block w-full pl-10 pr-3 py-3 border-none rounded-xl bg-white/10 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 backdrop-blur-sm"
+        >
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="max-w-6xl mx-auto px-4 -mt-8 relative z-20">
+    <div class="bg-white rounded-xl shadow-md p-1.5 flex flex-wrap md:flex-nowrap gap-2 overflow-x-auto scrollbar-hide">
+      <button 
+        (click)="setTab('mainstream')"
+        class="flex-1 min-w-[140px] py-3 px-4 rounded-lg text-sm md:text-base font-semibold transition-all duration-200 text-center whitespace-nowrap relative"
+        [class]="activeTab() === 'mainstream' 
+          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md transform scale-[1.02]' 
+          : 'text-slate-600 hover:bg-slate-50'">
+        🚀 市場核心主流
+        <span class="block text-xs font-normal opacity-80 mt-0.5">AI / 重電 / 綠能</span>
+      </button>
+      <button 
+        (click)="setTab('classic')"
+        class="flex-1 min-w-[140px] py-3 px-4 rounded-lg text-sm md:text-base font-semibold transition-all duration-200 text-center whitespace-nowrap relative"
+        [class]="activeTab() === 'classic' 
+          ? 'bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-md transform scale-[1.02]' 
+          : 'text-slate-600 hover:bg-slate-50'">
+        🏛️ 經典產業族群
+        <span class="block text-xs font-normal opacity-80 mt-0.5">蘋果 / 電動車 / 半導體</span>
+      </button>
+      <button 
+        (click)="setTab('comparison')"
+        class="flex-none md:flex-1 min-w-[120px] py-3 px-4 rounded-lg text-sm md:text-base font-semibold transition-all duration-200 text-center whitespace-nowrap flex items-center justify-center gap-2"
+        [class]="activeTab() === 'comparison' 
+          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md transform scale-[1.02]' 
+          : 'text-slate-600 hover:bg-slate-50'">
+        <span>📊 比較清單</span>
+        @if (comparisonCount() > 0) {
+          <span class="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm animate-bounce">
+            {{comparisonCount()}}
+          </span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 mt-8">
+    
+    <!-- Mainstream View -->
+    @if (activeTab() === 'mainstream') {
+      <div class="space-y-12 animate-fade-in">
+        @for (industry of mainstreamData(); track industry.id) {
+          <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <!-- Industry Header -->
+            <div class="bg-gradient-to-r p-6 md:p-8 text-white relative" [class]="industry.colorClass">
+              <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-3xl">{{industry.icon}}</span>
+                  <h2 class="text-2xl font-bold">{{industry.title}}</h2>
+                </div>
+                <p class="text-white/80 font-medium ml-1">{{industry.subtitle}}</p>
+              </div>
+              <div class="absolute right-0 bottom-0 opacity-10 transform translate-y-1/4 translate-x-1/4">
+                <svg class="w-64 h-64" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
+              </div>
+            </div>
+
+            <!-- Supply Chain Flow -->
+            <div class="p-6 md:p-8 bg-slate-50/50">
+              <div class="relative">
+                <!-- Vertical Line for mobile, hidden on desktop if we want horizontal, but let's stick to vertical stack for clarity on all devices -->
+                <div class="absolute left-4 md:left-8 top-4 bottom-4 w-0.5 bg-slate-200 hidden md:block"></div>
+
+                <div class="space-y-8">
+                  @for (stage of industry.stages; track stage.stageName; let isLast = $last) {
+                    <div class="relative pl-0 md:pl-16">
+                      <!-- Node Indicator (Desktop) -->
+                      <div class="absolute left-[30px] top-6 w-4 h-4 rounded-full bg-white border-4 border-slate-300 hidden md:block z-10"></div>
+                      
+                      <!-- Stage Content -->
+                      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group hover:border-blue-200 transition-colors">
+                        <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <span class="w-2 h-6 rounded-full bg-slate-400 group-hover:bg-blue-500 transition-colors"></span>
+                            {{stage.stageName}}
+                          </h3>
+                        </div>
+                        
+                        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                          @for (sub of stage.subCategories; track sub.name) {
+                            <div class="space-y-3">
+                              <h4 class="text-sm font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-1">
+                                {{sub.name}}
+                              </h4>
+                              <div class="flex flex-wrap gap-2 items-start">
+                                @for (stock of sub.stocks; track stock.code) {
+                                  <div 
+                                    class="relative inline-flex flex-col rounded-lg border transition-all duration-200 select-none group/card"
+                                    [class.ring-2]="isSelected(stock.code) || isMatch(stock.name) || isMatch(stock.code)"
+                                    [class.ring-emerald-500]="isSelected(stock.code)"
+                                    [class.ring-yellow-400]="!isSelected(stock.code) && (isMatch(stock.name) || isMatch(stock.code))"
+                                    [class.bg-emerald-50]="isSelected(stock.code)"
+                                    [class.bg-yellow-50]="!isSelected(stock.code) && (isMatch(stock.name) || isMatch(stock.code))"
+                                    [class.bg-white]="!isSelected(stock.code) && !(isMatch(stock.name) || isMatch(stock.code))"
+                                    [class.border-transparent]="isSelected(stock.code) || isMatch(stock.name) || isMatch(stock.code)"
+                                    [class.border-slate-200]="!isSelected(stock.code) && !(isMatch(stock.name) || isMatch(stock.code))"
+                                    [class.shadow-md]="isSelected(stock.code) || expandedStock() === stock.code"
+                                    [class.shadow-xl]="expandedStock() === stock.code"
+                                    [class.z-20]="expandedStock() === stock.code"
+                                  >
+                                    <div class="flex items-stretch">
+                                      <button 
+                                        (click)="toggleComparison(stock, industry.title, sub.name)"
+                                        class="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-l-lg hover:bg-black/5 transition-colors text-left"
+                                        title="點擊加入比較"
+                                      >
+                                        <span class="font-bold text-slate-800">{{stock.name}}</span>
+                                        <span class="text-xs font-mono text-slate-400 bg-black/5 px-1.5 py-0.5 rounded">{{stock.code}}</span>
+                                      </button>
+                                      
+                                      <button 
+                                        (click)="toggleInfo(stock.code, $event)"
+                                        class="px-2 py-1.5 border-l border-black/5 flex items-center justify-center rounded-r-lg hover:bg-black/5 text-slate-400 hover:text-slate-600 transition-colors"
+                                        title="顯示詳細資訊"
+                                      >
+                                        <svg class="w-4 h-4 transform transition-transform duration-200" [class.rotate-180]="expandedStock() === stock.code" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </button>
+                                    </div>
+
+                                    <!-- Selected Indicator -->
+                                    @if (isSelected(stock.code)) {
+                                      <span class="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm ring-1 ring-white z-10">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                      </span>
+                                    }
+
+                                    <!-- Collapsible Info Panel -->
+                                    @if (expandedStock() === stock.code) {
+                                      @let details = getMockFinancials(stock.code);
+                                      <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 rounded-b-lg w-full min-w-[200px] text-sm animate-fade-in shadow-inner">
+                                        <div class="grid grid-cols-2 gap-y-2 gap-x-4 mb-2">
+                                          <div class="text-slate-500">參考價</div>
+                                          <div class="font-mono font-bold text-right">{{details.price | number:'1.2-2'}}</div>
+                                          
+                                          <div class="text-slate-500">漲跌幅</div>
+                                          <div class="font-mono font-bold text-right"
+                                            [class.text-red-500]="details.change > 0" 
+                                            [class.text-green-500]="details.change < 0"
+                                            [class.text-slate-400]="details.change === 0">
+                                            @if(details.change > 0) {+}
+                                            {{details.change}}%
+                                          </div>
+                                          
+                                          <div class="text-slate-500">本益比</div>
+                                          <div class="font-mono text-right text-slate-700">{{details.pe}}</div>
+                                          
+                                          <div class="text-slate-500">殖利率</div>
+                                          <div class="font-mono text-right text-slate-700">{{details.yield}}%</div>
+
+                                          <div class="text-slate-500 col-span-2 border-t border-slate-200 mt-1 pt-1">市值 (億)</div>
+                                          <div class="font-mono text-right col-span-2 font-bold text-slate-800">{{details.marketCap}}</div>
+                                        </div>
+                                        
+                                        @if (stock.note) {
+                                          <div class="text-xs text-slate-500 bg-yellow-50 px-2 py-1.5 rounded border border-yellow-100 mt-2">
+                                            💡 {{stock.note}}
+                                          </div>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
+        }
+      </div>
+    }
+
+    <!-- Classic View -->
+    @if (activeTab() === 'classic') {
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+        @for (category of classicData(); track category.title) {
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+            <div class="p-4 flex items-center gap-3 border-b border-slate-100" [class]="category.colorClass">
+              <span class="text-2xl">{{category.icon}}</span>
+              <h3 class="font-bold text-lg text-white">{{category.title}}</h3>
+            </div>
+            
+            <div class="p-5 flex-1 space-y-6">
+              @for (group of category.groups; track group.name) {
+                <div>
+                  <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    {{group.name}}
+                    <span class="h-px flex-1 bg-slate-100"></span>
+                  </h4>
+                  <div class="flex flex-wrap gap-2 items-start">
+                    @for (stock of group.stocks; track stock.code) {
+                      <div 
+                        class="relative inline-flex flex-col rounded border transition-all duration-200 select-none group/card"
+                        [class.ring-2]="isSelected(stock.code) || isMatch(stock.name) || isMatch(stock.code)"
+                        [class.ring-emerald-500]="isSelected(stock.code)"
+                        [class.ring-yellow-400]="!isSelected(stock.code) && (isMatch(stock.name) || isMatch(stock.code))"
+                        [class.bg-emerald-50]="isSelected(stock.code)"
+                        [class.bg-yellow-50]="!isSelected(stock.code) && (isMatch(stock.name) || isMatch(stock.code))"
+                        [class.bg-slate-50]="!isSelected(stock.code) && !(isMatch(stock.name) || isMatch(stock.code))"
+                        [class.border-transparent]="isSelected(stock.code) || isMatch(stock.name) || isMatch(stock.code)"
+                        [class.border-slate-100]="!isSelected(stock.code) && !(isMatch(stock.name) || isMatch(stock.code))"
+                        [class.text-slate-600]="!isSelected(stock.code) && !(isMatch(stock.name) || isMatch(stock.code))"
+                        [class.shadow-sm]="isSelected(stock.code) || expandedStock() === stock.code"
+                        [class.shadow-lg]="expandedStock() === stock.code"
+                        [class.z-20]="expandedStock() === stock.code"
+                      >
+                         <div class="flex items-stretch">
+                            <button 
+                              (click)="toggleComparison(stock, category.title, group.name)"
+                              class="flex-1 flex items-center gap-1.5 px-2.5 py-1 rounded-l text-sm text-left hover:bg-black/5"
+                            >
+                              <span class="font-medium">{{stock.name}}</span>
+                              <span class="text-[10px] text-slate-400">{{stock.code}}</span>
+                            </button>
+
+                            <button 
+                              (click)="toggleInfo(stock.code, $event)"
+                              class="px-1.5 border-l border-black/5 flex items-center justify-center rounded-r hover:bg-black/5 text-slate-400 hover:text-slate-600"
+                            >
+                              <svg class="w-3 h-3 transform transition-transform duration-200" [class.rotate-180]="expandedStock() === stock.code" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                         </div>
+                         
+                         <!-- Note Dot -->
+                         @if (stock.note && expandedStock() !== stock.code) {
+                           <span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-400 pointer-events-none"></span>
+                         }
+
+                        <!-- Selected Checkmark -->
+                        @if (isSelected(stock.code)) {
+                          <span class="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm ring-1 ring-white scale-75 z-10">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                        }
+
+                        <!-- Collapsible Info Panel -->
+                        @if (expandedStock() === stock.code) {
+                           @let details = getMockFinancials(stock.code);
+                           <div class="px-3 py-2 bg-white border-t border-slate-100 rounded-b w-full min-w-[160px] text-xs shadow-inner animate-fade-in z-20">
+                              <div class="space-y-1">
+                                <div class="flex justify-between">
+                                  <span class="text-slate-400">股價</span>
+                                  <span class="font-mono font-bold">{{details.price | number:'1.2-2'}}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                  <span class="text-slate-400">漲跌</span>
+                                  <span class="font-mono font-bold" 
+                                        [class.text-red-500]="details.change > 0" 
+                                        [class.text-green-500]="details.change < 0">
+                                    {{details.change}}%
+                                  </span>
+                                </div>
+                                <div class="flex justify-between">
+                                  <span class="text-slate-400">本益比</span>
+                                  <span class="font-mono">{{details.pe}}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                  <span class="text-slate-400">殖利率</span>
+                                  <span class="font-mono">{{details.yield}}%</span>
+                                </div>
+                                <div class="flex justify-between pt-1 border-t border-slate-100">
+                                  <span class="text-slate-400">市值</span>
+                                  <span class="font-mono">{{details.marketCap}}億</span>
+                                </div>
+                              </div>
+                              @if (stock.note) {
+                                <div class="mt-2 pt-1 border-t border-slate-100 text-slate-500">
+                                  {{stock.note}}
+                                </div>
+                              }
+                           </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Comparison View -->
+    @if (activeTab() === 'comparison') {
+      <div class="animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+          <div class="p-6 md:p-8 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <h2 class="text-2xl font-bold flex items-center gap-2">
+                📊 股票比較清單
+                <span class="text-base bg-white/20 px-3 py-1 rounded-full font-medium">{{comparisonCount()}} / 10</span>
+              </h2>
+              <p class="text-white/80 mt-1">請從其他頁面點擊股票卡片加入比較</p>
+            </div>
+            @if (comparisonCount() > 0) {
+              <button 
+                (click)="clearComparison()"
+                class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 border border-white/20">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                清空清單
+              </button>
+            }
+          </div>
+
+          @if (comparisonCount() === 0) {
+            <div class="p-16 text-center text-slate-400">
+              <div class="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-slate-600 mb-2">尚未選擇任何股票</h3>
+              <p>請回到 <button (click)="setTab('mainstream')" class="text-blue-600 hover:underline">主流族群</button> 或 <button (click)="setTab('classic')" class="text-blue-600 hover:underline">經典族群</button> 點擊股票進行比較。</p>
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200">
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap w-16">移除</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap">股票名稱</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap">代號</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap">產業類別</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap text-right">參考價*</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap text-right">漲跌幅*</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap text-right">本益比*</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap text-right">殖利率*</th>
+                    <th class="p-4 font-semibold text-slate-500 whitespace-nowrap">備註</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (item of comparisonList(); track item.stock.code) {
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                      <td class="p-4 text-center align-middle">
+                        <button 
+                          (click)="removeComparisonItem(item.stock.code)"
+                          class="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                          title="移除">
+                          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </td>
+                      <td class="p-4 font-bold text-slate-800 align-middle">{{item.stock.name}}</td>
+                      <td class="p-4 font-mono text-slate-500 align-middle">
+                         <span class="bg-slate-100 px-2 py-1 rounded text-sm">{{item.stock.code}}</span>
+                      </td>
+                      <td class="p-4 text-sm text-slate-600 align-middle">
+                        <span class="bg-slate-50 px-2 py-1 rounded text-xs border border-slate-100">{{item.categoryLabel}}</span>
+                      </td>
+                      <td class="p-4 text-right font-mono font-medium align-middle">
+                        {{item.mockData.price | number:'1.2-2'}}
+                      </td>
+                      <td class="p-4 text-right font-mono font-medium align-middle" 
+                        [class.text-red-500]="item.mockData.change > 0" 
+                        [class.text-green-500]="item.mockData.change < 0"
+                        [class.text-slate-400]="item.mockData.change === 0">
+                        @if(item.mockData.change > 0) {+}
+                        {{item.mockData.change | number:'1.2-2'}}%
+                      </td>
+                      <td class="p-4 text-right font-mono text-slate-600 align-middle">{{item.mockData.pe}}</td>
+                      <td class="p-4 text-right font-mono text-slate-600 align-middle">{{item.mockData.yield}}%</td>
+                      <td class="p-4 text-sm text-slate-500 max-w-xs truncate align-middle" title="{{item.stock.note}}">{{item.stock.note || '-'}}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-400 text-right">
+              * 價格與財務數據為模擬產生，僅供版面展示參考，非即時資訊。
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </main>
+  
+  <footer class="max-w-6xl mx-auto px-4 mt-20 text-center text-slate-400 text-sm">
+    <p>資料來源：公開市場資訊整理</p>
+    <p class="mt-2">本網站內容僅供參考，不構成任何投資建議。</p>
+  </footer>
+</div>
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+  }
+</style>
